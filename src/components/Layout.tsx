@@ -2,7 +2,6 @@ import React from "react"
 import Head from "next/head"
 import Link from "next/link"
 import {
-    ChakraProvider,
     Container,
     Flex,
     Img,
@@ -23,7 +22,7 @@ const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = fal
     const disclosure = useDisclosure()
 
     return (
-        <ChakraProvider theme={theme}>
+        <>
             <Head>
                 <title>ClickFuel</title>
                 <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -95,7 +94,7 @@ const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = fal
             )}
 
             <CreateModal {...disclosure} />
-        </ChakraProvider>
+        </>
     )
 }
 

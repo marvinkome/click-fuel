@@ -1,8 +1,15 @@
 import App from "next/app"
 import type { AppProps, AppContext } from "next/app"
+import theme from "theme"
+import React from "react"
+import { ChakraProvider } from "@chakra-ui/react"
 
 function ClickFuelApp({ Component, pageProps, wallet }: AppProps & { wallet: any }) {
-    return <Component wallet={wallet} {...pageProps} />
+    return (
+        <ChakraProvider theme={theme}>
+            <Component wallet={wallet} {...pageProps} />
+        </ChakraProvider>
+    )
 }
 
 ClickFuelApp.getInitialProps = async (appContext: AppContext) => {
