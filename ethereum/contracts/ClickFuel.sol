@@ -63,4 +63,8 @@ contract ClickFuel {
             post.freezeCount++;
         }
     }
+
+    function getPostsCount() public view returns (uint256) {
+        return allPosts.length;
+    }
 }
