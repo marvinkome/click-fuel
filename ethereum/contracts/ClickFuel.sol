@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.5.0;
+pragma solidity ^0.7.0;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v2.5.1/contracts/token/ERC20/ERC20.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v2.5.1/contracts/token/ERC20/ERC20Detailed.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract FuelToken is ERC20, ERC20Detailed {
-    constructor(uint256 initialSupply) public ERC20Detailed("Fuel", "Fuel", 1) {
+contract FuelToken is ERC20 {
+    constructor(uint256 initialSupply) ERC20("Fuel", "FUEL") {
         _mint(msg.sender, initialSupply);
+        _setupDecimals(0);
     }
 }
 
@@ -24,21 +24,21 @@ contract ClickFuel {
     mapping(address => bool) public users;
 
     modifier voteable() {
-        require(token.transferFrom(msg.sender, address(this), 10));
+        require(token.transferFrom(msg.sender, address(this), 1));
         _;
     }
 
     modifier createable() {
-        require(token.transferFrom(msg.sender, address(this), 20));
+        require(token.transferFrom(msg.sender, address(this), 2));
         _;
     }
 
-    constructor() public {
+    constructor() {
         token = new FuelToken(25000000);
     }
 
     function transferToken() public {
-        token.transfer(msg.sender, 100);
+        token.transfer(msg.sender, 10);
     }
 
     function createPost(string memory detail) public createable {
@@ -46,7 +46,7 @@ contract ClickFuel {
             Post({
                 detail: detail,
                 creator: msg.sender,
-                createdTime: now,
+                createdTime: block.timestamp,
                 flameCount: 0,
                 freezeCount: 0
             });
