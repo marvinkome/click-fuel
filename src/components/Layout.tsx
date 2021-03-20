@@ -16,9 +16,10 @@ import {
 } from "@chakra-ui/react"
 import { IoCreateOutline } from "react-icons/io5"
 import CreateModal from "./CreateModal"
-import theme from "theme"
+import { useWalletUpdater } from "wallet/hooks"
 
 const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = false }) => {
+    useWalletUpdater()
     const disclosure = useDisclosure()
 
     return (

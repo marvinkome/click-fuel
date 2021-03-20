@@ -3,11 +3,16 @@ import type { AppProps, AppContext } from "next/app"
 import theme from "theme"
 import React from "react"
 import { ChakraProvider } from "@chakra-ui/react"
+import { getAddressFromCookie } from "wallet"
+import { WalletProvider } from "wallet/context"
 
-function ClickFuelApp({ Component, pageProps, wallet }: AppProps & { wallet: any }) {
+type Props = AppProps & { initialAddress?: string }
+function ClickFuelApp({ Component, ...appProps }: Props) {
     return (
         <ChakraProvider theme={theme}>
-            <Component wallet={wallet} {...pageProps} />
+            <WalletProvider address={appProps.initialAddress}>
+                <Component {...appProps.pageProps} />
+            </WalletProvider>
         </ChakraProvider>
     )
 }
@@ -16,11 +21,11 @@ ClickFuelApp.getInitialProps = async (appContext: AppContext) => {
     const { req, res } = appContext.ctx
     const serverSide = !!req && !!res
 
-    // get existing wallet from cookie
-    // const { publicKey } = getWallet(appContext.ctx, serverSide)
+    // get initial wallet from cookie
+    const address = getAddressFromCookie(appContext.ctx, serverSide)
 
     const appProps = await App.getInitialProps(appContext)
-    return { ...appProps, wallet: "any" }
+    return { ...appProps, initialAddress: address }
 }
 
 export default ClickFuelApp
