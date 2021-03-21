@@ -18,14 +18,14 @@ contract ClickFuel {
         uint256 flameCount;
     }
 
-    FuelToken public token;
+    ERC20 public token;
     Post[] public allPosts;
 
     mapping(string => bool) hasFaucetUserId;
     mapping(address => bool) hasFaucetAddress;
 
     modifier createable() {
-        require(token.transferFrom(msg.sender, address(this), 20));
+        require(token.transferFrom(msg.sender, address(this), 10));
         _;
     }
 
@@ -34,8 +34,8 @@ contract ClickFuel {
         _;
     }
 
-    constructor() {
-        token = new FuelToken(25000000);
+    constructor(ERC20 _tokenAddress) {
+        token = _tokenAddress;
     }
 
     // Token Functionalities
@@ -56,7 +56,7 @@ contract ClickFuel {
                 detail: detail,
                 creator: msg.sender,
                 createdTime: block.timestamp,
-                flameCount: 20
+                flameCount: 10
             });
 
         allPosts.push(newPost);

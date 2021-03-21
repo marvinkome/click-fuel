@@ -2,12 +2,14 @@ import { expect } from "./setup"
 import { l2ethers as ethers } from "hardhat"
 import { Contract, Signer } from "ethers"
 
-describe("ClickFuel", () => {
+describe("ClickFuel OVM", () => {
     let account1: Signer
     let account2: Signer
     let account3: Signer
     let account4: Signer
+
     let ClickFuel: Contract
+    let tokenContract: Contract
 
     const googleId1 = "105809056115901676361"
     const googleId2 = "105806056115901676362"
@@ -18,7 +20,17 @@ describe("ClickFuel", () => {
     })
 
     beforeEach(async () => {
-        ClickFuel = await (await ethers.getContractFactory("ClickFuel")).connect(account1).deploy()
+        let initialSupply = 50000000
+
+        tokenContract = await (await ethers.getContractFactory("FuelToken"))
+            .connect(account1)
+            .deploy(initialSupply)
+
+        ClickFuel = await (await ethers.getContractFactory("ClickFuel"))
+            .connect(account1)
+            .deploy(tokenContract.address)
+
+        await tokenContract.connect(account1).transfer(ClickFuel.address, initialSupply)
     })
 
     describe("Deploy", () => {
@@ -29,8 +41,6 @@ describe("ClickFuel", () => {
     })
 
     describe("Token Transfer", () => {
-        let tokenContract: Contract
-
         beforeEach(async () => {
             const tokenAddress = await ClickFuel.token()
             tokenContract = await ethers.getContractAt("FuelToken", tokenAddress)
@@ -85,14 +95,14 @@ describe("ClickFuel", () => {
             const creator = account1
             const creatorAddress = await creator.getAddress()
 
-            await tokenContract.connect(creator).approve(ClickFuel.address, 20)
+            await tokenContract.connect(creator).approve(ClickFuel.address, 10)
             await ClickFuel.connect(creator).createPost("https://google.com")
 
             const post = await ClickFuel.allPosts(0)
             expect(post.detail).to.eq("https://google.com")
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
-            expect(creatorBalance).to.eq(30)
+            expect(creatorBalance).to.eq(40)
         })
 
         it("should upvote for a post", async () => {
@@ -102,17 +112,17 @@ describe("ClickFuel", () => {
             const voter = account2
             const voterAddress = await voter.getAddress()
 
-            await tokenContract.connect(creator).approve(ClickFuel.address, 20)
+            await tokenContract.connect(creator).approve(ClickFuel.address, 10)
             await ClickFuel.connect(creator).createPost("https://google.com")
 
             await tokenContract.connect(voter).approve(ClickFuel.address, 1)
             await ClickFuel.connect(voter).vote(true, 0)
 
             const post = await ClickFuel.allPosts(0)
-            expect(post.flameCount.toNumber()).to.eq(21)
+            expect(post.flameCount.toNumber()).to.eq(11)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
-            expect(creatorBalance).to.eq(30)
+            expect(creatorBalance).to.eq(40)
 
             const voterBalance = (await tokenContract.balanceOf(voterAddress)).toNumber()
             expect(voterBalance).to.eq(49)
@@ -125,17 +135,17 @@ describe("ClickFuel", () => {
             const voter = account2
             const voterAddress = await voter.getAddress()
 
-            await tokenContract.connect(creator).approve(ClickFuel.address, 20)
+            await tokenContract.connect(creator).approve(ClickFuel.address, 10)
             await ClickFuel.connect(creator).createPost("https://google.com")
 
             await tokenContract.connect(voter).approve(ClickFuel.address, 1)
             await ClickFuel.connect(voter).vote(false, 0)
 
             const post = await ClickFuel.allPosts(0)
-            expect(post.flameCount.toNumber()).to.eq(19)
+            expect(post.flameCount.toNumber()).to.eq(9)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
-            expect(creatorBalance).to.eq(30)
+            expect(creatorBalance).to.eq(40)
 
             const voterBalance = (await tokenContract.balanceOf(voterAddress)).toNumber()
             expect(voterBalance).to.eq(49)
@@ -149,7 +159,7 @@ describe("ClickFuel", () => {
             const voter1 = account3
 
             // create a post
-            await tokenContract.connect(creator).approve(ClickFuel.address, 20)
+            await tokenContract.connect(creator).approve(ClickFuel.address, 10)
             await ClickFuel.connect(creator).createPost("https://google.com")
 
             // downvote a post once
@@ -161,7 +171,7 @@ describe("ClickFuel", () => {
             await ClickFuel.connect(voter1).vote(false, 0)
 
             let post = await ClickFuel.allPosts(0)
-            expect(post.flameCount.toNumber()).to.eq(18)
+            expect(post.flameCount.toNumber()).to.eq(8)
 
             await ClickFuel.connect(creator).withdraw(0)
             post = await ClickFuel.allPosts(0)
