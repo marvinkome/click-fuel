@@ -30,6 +30,18 @@ export function useBalance() {
     return balance
 }
 
+export function useImportWallet() {
+    const [_, actions] = useClientContext()
+
+    return useCallback(async (mnemonic: string) => {
+        const wallet = Wallet.fromMnemonic(mnemonic)
+        const balance = await getOVMBalance(wallet)
+        const address = wallet.address
+
+        actions.initialize(mnemonic, address, balance)
+    }, [])
+}
+
 export function useCreateWallet() {
     const [_, actions] = useClientContext()
 

@@ -19,7 +19,13 @@ import {
 } from "@chakra-ui/react"
 import { truncateAddress } from "libs/utils"
 import { CopyIcon } from "@chakra-ui/icons"
-import { useAddress, useBalance, useTransferTokens } from "wallet/hooks"
+import {
+    useAccount,
+    useAddress,
+    useBalance,
+    useImportWallet,
+    useTransferTokens,
+} from "wallet/hooks"
 
 function useTransferTokenForm() {
     const toast = useToast()
@@ -56,6 +62,7 @@ function useTransferTokenForm() {
             description: `${amount} FUEL has been sent to ${receiver}`,
             status: "success",
             isClosable: true,
+            position: "top-right",
         })
     }
 
@@ -67,12 +74,55 @@ function useTransferTokenForm() {
     }
 }
 
+function useImportAccountForm() {
+    const toast = useToast()
+    const importWallet = useImportWallet()
+    const [error, setError] = React.useState("")
+    const [mnemonic, setMnemonic] = React.useState("")
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setError("")
+        setMnemonic(event.target.value)
+    }
+
+    const handleSubmit = async (event?: React.FormEvent<HTMLFormElement>) => {
+        event?.preventDefault()
+
+        importWallet(mnemonic)
+            .then(() => {
+                toast({
+                    title: "Wallet imported",
+                    description: `Your wallet have been imported`,
+                    status: "success",
+                    isClosable: true,
+                    position: "top-right",
+                })
+
+                setMnemonic("")
+            })
+            .catch((err) => {
+                console.log(err)
+                setError("Failed to import wallet. Please check your seed phrase and try again")
+            })
+    }
+
+    return {
+        error,
+        mnemonic,
+        handleChange,
+        handleSubmit,
+    }
+}
+
 function WalletPage() {
     const router = useRouter()
     const address: string = useAddress()
     const balance = useBalance()
+    const account = useAccount()
     const { hasCopied, onCopy } = useClipboard(address)
+    const accountCopy = useClipboard(account)
     const transferForm = useTransferTokenForm()
+    const importAccountForm = useImportAccountForm()
 
     React.useEffect(() => {
         if (!address) {
@@ -82,7 +132,7 @@ function WalletPage() {
 
     return (
         <Layout hideCreate>
-            <Box mt={7}>
+            <Box mb={14} mt={7}>
                 <Flex
                     direction="column"
                     align="center"
@@ -120,7 +170,7 @@ function WalletPage() {
                     </Heading>
 
                     <form onSubmit={transferForm.handleSubmit}>
-                        <FormControl isRequired mb={5} id="amount">
+                        <FormControl isInvalid={!!transferForm.error} isRequired mb={5} id="amount">
                             <FormLabel>Amount to send</FormLabel>
                             <Input
                                 onChange={transferForm.handleChange("amount")}
@@ -131,7 +181,12 @@ function WalletPage() {
                             />
                         </FormControl>
 
-                        <FormControl isRequired mb={5} id="receiver">
+                        <FormControl
+                            isInvalid={!!transferForm.error}
+                            isRequired
+                            mb={5}
+                            id="receiver"
+                        >
                             <FormLabel>Receiver's address</FormLabel>
                             <Input
                                 onChange={transferForm.handleChange("receiver")}
@@ -160,14 +215,28 @@ function WalletPage() {
                         Manage wallet
                     </Heading>
 
-                    <Button colorScheme="blue" isFullWidth size="lg" mb={10} variant="outline">
-                        Export wallet
+                    <Button
+                        onClick={accountCopy.onCopy}
+                        colorScheme="blue"
+                        isFullWidth
+                        size="lg"
+                        mb={10}
+                        variant="outline"
+                    >
+                        {accountCopy.hasCopied ? "Copied seed phrase!" : "Export wallet"}
                     </Button>
 
-                    <form>
-                        <FormControl mb={5} id="amount">
+                    <form onSubmit={importAccountForm.handleSubmit}>
+                        <FormControl isInvalid={!!importAccountForm.error} mb={5} id="importWallet">
                             <FormLabel>Import Wallet</FormLabel>
-                            <Input size="lg" placeholder="Your seed phrase" type="number" />
+                            <Input
+                                onChange={importAccountForm.handleChange}
+                                value={importAccountForm.mnemonic}
+                                size="lg"
+                                placeholder="Your seed phrase"
+                                type="text"
+                            />
+                            <FormErrorMessage>{importAccountForm.error}</FormErrorMessage>
                         </FormControl>
 
                         <Button colorScheme="blue" variant="outline" type="submit">
