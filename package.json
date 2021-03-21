@@ -9,7 +9,8 @@
         "clean:eth": "rimraf ./ethereum/cache && rimraf ./ethereum/artifacts",
         "hrd": "TS_NODE_PROJECT='./ethereum/tsconfig.json' TS_NODE_TRANSPILE_ONLY=1 npx hardhat",
         "compile:eth": "yarn clean:eth && yarn hrd compile",
-        "test:evm": "yarn clean:eth && yarn hrd test"
+        "deploy:eth": "yarn hrd run ethereum/scripts/deploy.ts --network kovenOE",
+        "test:eth": "yarn clean:eth && yarn hrd test"
     },
     "dependencies": {
         "@chakra-ui/icons": "^1.0.6",
@@ -28,6 +29,7 @@
         "qrcode.react": "^1.0.1",
         "react": "17.0.1",
         "react-dom": "17.0.1",
+        "react-google-login": "^5.2.2",
         "react-icons": "^4.2.0",
         "react-tiny-link": "^3.6.1"
     },

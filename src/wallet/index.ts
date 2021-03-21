@@ -1,38 +1,30 @@
-import { NextPageContext } from "next"
-import nextCookies from "next-cookies"
-import Cookies from "js-cookie"
+import * as ethers from "ethers"
 
-export const STORAGE_NAME = "CLICK_FUEL"
+// const provider = new ethers.providers.JsonRpcProvider("https://kovan.optimism.io")
+const provider = new ethers.providers.JsonRpcProvider()
 
-export interface ICookie {
-    address: string | null
+const address = process.env.NEXT_PUBLIC_CLICK_FUEL_CONTRACT_ADDRESS
+const abi = require("../../ethereum/artifacts/contracts/ClickFuel.sol/ClickFuel-ovm.json").abi
+const clickFuelContract = new ethers.Contract(address, abi, provider)
+
+const tokenAddress = process.env.NEXT_PUBLIC_FUEL_TOKEN_CONTRACT_ADDRESS
+const tokenAbi = require("../../ethereum/artifacts/contracts/ClickFuel.sol/FuelToken-ovm.json").abi
+const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, provider)
+
+// WALLET
+export async function getOVMBalance(wallet: ethers.Wallet) {
+    const balance = (await tokenContract
+        .connect(wallet.connect(provider))
+        .balanceOf(wallet.address)) as ethers.BigNumber
+
+    return balance.toNumber()
 }
 
-export interface ILocalStorage {
-    mnemonic: string | null
+export async function transferToken(wallet: ethers.Wallet, address: string, amount: number) {
+    await tokenContract.connect(wallet.connect(provider)).transfer(address, amount)
 }
 
-export function toBase64(o: ICookie | ILocalStorage): string {
-    const stringified = JSON.stringify(o || {})
-    const base64 = Buffer.from(stringified).toString("base64")
-    return base64
-}
-
-function fromBase64(s: string) {
-    const stringifiedCookie = Buffer.from(s || "", "base64").toString()
-    const asObject = JSON.parse(stringifiedCookie || "{}")
-
-    return asObject
-}
-
-export function getAddressFromCookie(context: NextPageContext, serverSide: boolean) {
-    const cookie = serverSide ? nextCookies(context)[STORAGE_NAME] : Cookies.get(STORAGE_NAME)
-    const { address } = fromBase64(cookie) as ICookie
-
-    return address
-}
-
-export function getAccountFromLocalStorage() {
-    const { mnemonic } = fromBase64(window.localStorage.getItem(STORAGE_NAME)) as ILocalStorage
-    return mnemonic
+// CLICK FUEL
+export async function getTokens(wallet: ethers.Wallet, googleId: string) {
+    await clickFuelContract.connect(wallet.connect(provider)).transferToken(googleId)
 }

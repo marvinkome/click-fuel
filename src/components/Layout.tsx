@@ -5,10 +5,7 @@ import {
     Container,
     Flex,
     Img,
-    Text,
     Box,
-    LinkBox,
-    LinkOverlay,
     Button,
     HStack,
     useDisclosure,
@@ -16,10 +13,13 @@ import {
 } from "@chakra-ui/react"
 import { IoCreateOutline } from "react-icons/io5"
 import CreateModal from "./CreateModal"
-import { useWalletUpdater } from "wallet/hooks"
+import { useAccount, useWalletUpdater } from "wallet/hooks"
+import { Account } from "./Account"
 
 const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = false }) => {
     useWalletUpdater()
+
+    const isLoggedIn = !!useAccount()
     const disclosure = useDisclosure()
 
     return (
@@ -34,45 +34,26 @@ const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = fal
             </Head>
 
             <Flex justify="space-between" px={{ md: 14, base: 3 }} mt={{ md: 10, base: 5 }}>
-                <Link href="/" passHref>
+                <Link href="/">
                     <a>
                         <Img src="/logo.svg" alt="ClickFuel logo" />
                     </a>
                 </Link>
 
                 <HStack align="center" spacing={10}>
-                    {!hideCreate && (
+                    {!hideCreate && isLoggedIn && (
                         <Button display={{ base: "none", md: "block" }} onClick={disclosure.onOpen}>
                             Submit Link
                         </Button>
                     )}
 
-                    <LinkBox
-                        as={Flex}
-                        borderRadius="20"
-                        border="1px"
-                        borderColor="gray.500"
-                        bg="gray.700"
-                        align="center"
-                    >
-                        <Img ml={3} boxSize="20px" src="/flame-icon.svg" alt="Flame Icon" />
-
-                        <Text fontSize="lg" ml={2} mr={5}>
-                            10
-                        </Text>
-
-                        <Link href="/wallet" passHref>
-                            <LinkOverlay>
-                                <Box w="40px" h="40px" borderRadius="full" bg="primary" />
-                            </LinkOverlay>
-                        </Link>
-                    </LinkBox>
+                    <Account />
                 </HStack>
             </Flex>
 
             <Container my={5}>{children}</Container>
 
-            {!hideCreate && (
+            {!hideCreate && isLoggedIn && (
                 <Box
                     borderRadius="full"
                     p={2}

@@ -1,4 +1,4 @@
-import { l2ethers, ethers } from "hardhat"
+import { ethers } from "hardhat"
 
 async function main() {
     const initialSupply = 50_000_000
@@ -7,8 +7,8 @@ async function main() {
     console.log("Deploying contracts with the account: ", deployer.address)
     console.log("Account balance:", (await deployer.getBalance()).toString())
 
-    const FuelToken = await l2ethers.getContractFactory("FuelToken")
-    const ClickFuel = await l2ethers.getContractFactory("ClickFuel")
+    const FuelToken = await ethers.getContractFactory("FuelToken")
+    const ClickFuel = await ethers.getContractFactory("ClickFuel")
 
     const fuelToken = await FuelToken.deploy(initialSupply)
     const clickFuel = await ClickFuel.deploy(fuelToken.address)

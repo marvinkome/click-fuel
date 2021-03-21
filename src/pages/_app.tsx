@@ -3,7 +3,7 @@ import type { AppProps, AppContext } from "next/app"
 import theme from "theme"
 import React from "react"
 import { ChakraProvider } from "@chakra-ui/react"
-import { getAddressFromCookie } from "wallet"
+import { getAddressFromCookie } from "wallet/utils"
 import { WalletProvider } from "wallet/context"
 
 type Props = AppProps & { initialAddress?: string }
@@ -23,8 +23,11 @@ ClickFuelApp.getInitialProps = async (appContext: AppContext) => {
 
     // get initial wallet from cookie
     const address = getAddressFromCookie(appContext.ctx, serverSide)
+    console.log(address)
 
-    const appProps = await App.getInitialProps(appContext)
+    // @ts-ignore
+    const appProps = await App.getInitialProps({ ...appContext, initialAddress: address })
+
     return { ...appProps, initialAddress: address }
 }
 
