@@ -16,20 +16,21 @@ contract ClickFuel {
         string detail;
         uint256 createdTime;
         uint256 flameCount;
-        uint256 freezeCount;
     }
 
     FuelToken public token;
     Post[] public allPosts;
-    mapping(address => bool) public users;
 
-    modifier voteable() {
-        require(token.transferFrom(msg.sender, address(this), 1));
+    mapping(string => bool) hasFaucetUserId;
+    mapping(address => bool) hasFaucetAddress;
+
+    modifier createable() {
+        require(token.transferFrom(msg.sender, address(this), 20));
         _;
     }
 
-    modifier createable() {
-        require(token.transferFrom(msg.sender, address(this), 2));
+    modifier voteable() {
+        require(token.transferFrom(msg.sender, address(this), 1));
         _;
     }
 
@@ -37,18 +38,25 @@ contract ClickFuel {
         token = new FuelToken(25000000);
     }
 
-    function transferToken() public {
-        token.transfer(msg.sender, 10);
+    // Token Functionalities
+    function transferToken(string memory userId) public {
+        require(!hasFaucetUserId[userId], "User faucet already");
+        require(!hasFaucetAddress[msg.sender], "User faucet already");
+
+        token.transfer(msg.sender, 50);
+
+        hasFaucetUserId[userId] = true;
+        hasFaucetAddress[msg.sender] = true;
     }
 
+    // Post Functionalities
     function createPost(string memory detail) public createable {
         Post memory newPost =
             Post({
                 detail: detail,
                 creator: msg.sender,
                 createdTime: block.timestamp,
-                flameCount: 0,
-                freezeCount: 0
+                flameCount: 20
             });
 
         allPosts.push(newPost);
@@ -56,12 +64,23 @@ contract ClickFuel {
 
     function vote(bool upvote, uint256 indexOfPost) public voteable {
         Post storage post = allPosts[indexOfPost];
+        require(post.flameCount != 0, "Post has no flames");
 
         if (upvote == true) {
             post.flameCount++;
-        } else {
-            post.freezeCount++;
         }
+
+        if (upvote == false) {
+            post.flameCount--;
+        }
+    }
+
+    function withdraw(uint256 indexOfPost) public {
+        Post storage post = allPosts[indexOfPost];
+
+        token.transfer(msg.sender, post.flameCount);
+
+        post.flameCount = 0;
     }
 
     function getPostsCount() public view returns (uint256) {
