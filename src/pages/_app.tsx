@@ -23,7 +23,6 @@ ClickFuelApp.getInitialProps = async (appContext: AppContext) => {
 
     // get initial wallet from cookie
     const address = getAddressFromCookie(appContext.ctx, serverSide)
-    console.log(address)
 
     // @ts-ignore
     const appProps = await App.getInitialProps({ ...appContext, initialAddress: address })

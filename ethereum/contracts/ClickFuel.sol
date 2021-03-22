@@ -21,8 +21,8 @@ contract ClickFuel {
     ERC20 public token;
     Post[] public allPosts;
 
-    mapping(string => bool) hasFaucetUserId;
-    mapping(address => bool) hasFaucetAddress;
+    mapping(string => bool) public hasFaucetUserId;
+    mapping(address => bool) public hasFaucetAddress;
 
     modifier createable() {
         require(token.transferFrom(msg.sender, address(this), 10));

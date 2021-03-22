@@ -28,3 +28,9 @@ export async function transferToken(wallet: ethers.Wallet, address: string, amou
 export async function getTokens(wallet: ethers.Wallet, googleId: string) {
     await clickFuelContract.connect(wallet.connect(provider)).transferToken(googleId)
 }
+
+export async function checkAccountVerification(wallet: ethers.Wallet) {
+    return !!(await clickFuelContract
+        .connect(wallet.connect(provider))
+        .hasFaucetAddress(wallet.address))
+}

@@ -3,7 +3,7 @@ import { Wallet } from "ethers"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { STORAGE_NAME, getAccountFromLocalStorage, toBase64 } from "wallet/utils"
 import { useClientContext } from "./context"
-import { getOVMBalance, transferToken } from "./index"
+import { checkAccountVerification, getOVMBalance, getTokens, transferToken } from "./index"
 
 export function useAddress() {
     const [{ address }] = useClientContext()
@@ -30,6 +30,11 @@ export function useBalance() {
     return balance
 }
 
+export function useAccountVerified() {
+    const [{ verified }] = useClientContext()
+    return verified
+}
+
 export function useImportWallet() {
     const [_, actions] = useClientContext()
 
@@ -42,22 +47,20 @@ export function useImportWallet() {
     }, [])
 }
 
-export function useCreateWallet() {
-    const [_, actions] = useClientContext()
+export function useGetTokens() {
+    const [state, actions] = useClientContext()
+    const wallet = useWallet()
 
-    return useCallback(async (googleId: string) => {
-        console.log("Creating a new wallet...")
+    return useCallback(
+        async (googleId: string) => {
+            await getTokens(wallet, googleId)
+            const balance = await getOVMBalance(wallet)
 
-        const wallet = Wallet.createRandom()
-        actions.initialize(wallet.mnemonic.phrase, wallet.address)
-
-        console.log("Wallet created successfully")
-
-        // TODO:: Uncomment when moving to OVM
-        // await getTokens(wallet, googleId)
-        // const balance = await getOVMBalance(wallet)
-        // actions.updateBalance(balance)
-    }, [])
+            actions.updateBalance(balance)
+            actions.updateAccountVerified(true)
+        },
+        [wallet, state.balance]
+    )
 }
 
 export function useTransferTokens() {
@@ -80,7 +83,11 @@ export function useWalletUpdater() {
     useEffect(() => {
         ;(async function () {
             setIsClient(true)
-            if (!state.address) return
+            if (!state.address) {
+                console.log("Creating a new wallet...")
+                const wallet = Wallet.createRandom()
+                return actions.initialize(wallet.mnemonic.phrase, wallet.address, 0)
+            }
 
             // get address from local storage
             const mnemonic = getAccountFromLocalStorage()
@@ -95,7 +102,9 @@ export function useWalletUpdater() {
             }
 
             const balance = await getOVMBalance(wallet)
-            actions.initialize(mnemonic, address, balance)
+            const verified = await checkAccountVerification(wallet)
+
+            actions.initialize(mnemonic, address, balance, verified)
         })()
     }, [])
 

@@ -10,16 +10,18 @@ import {
     HStack,
     useDisclosure,
     IconButton,
+    LinkBox,
+    Text,
+    LinkOverlay,
 } from "@chakra-ui/react"
 import { IoCreateOutline } from "react-icons/io5"
 import CreateModal from "./CreateModal"
-import { useAccount, useWalletUpdater } from "wallet/hooks"
-import { Account } from "./Account"
+import { useAccount, useBalance, useWalletUpdater } from "wallet/hooks"
 
 const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = false }) => {
     useWalletUpdater()
 
-    const isLoggedIn = !!useAccount()
+    const balance = useBalance()
     const disclosure = useDisclosure()
 
     return (
@@ -41,19 +43,38 @@ const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = fal
                 </Link>
 
                 <HStack align="center" spacing={10}>
-                    {!hideCreate && isLoggedIn && (
+                    {!hideCreate && (
                         <Button display={{ base: "none", md: "block" }} onClick={disclosure.onOpen}>
                             Submit Link
                         </Button>
                     )}
 
-                    <Account />
+                    <LinkBox
+                        as={Flex}
+                        borderRadius="20"
+                        border="1px"
+                        borderColor="gray.500"
+                        bg="gray.700"
+                        align="center"
+                    >
+                        <Img ml={3} boxSize="20px" src="/flame-icon.svg" alt="Flame Icon" />
+
+                        <Text fontSize="lg" ml={2} mr={5}>
+                            {balance}
+                        </Text>
+
+                        <Link passHref href="/wallet">
+                            <LinkOverlay>
+                                <Box w="40px" h="40px" borderRadius="full" bg="primary" />
+                            </LinkOverlay>
+                        </Link>
+                    </LinkBox>
                 </HStack>
             </Flex>
 
             <Container my={5}>{children}</Container>
 
-            {!hideCreate && isLoggedIn && (
+            {!hideCreate && (
                 <Box
                     borderRadius="full"
                     p={2}

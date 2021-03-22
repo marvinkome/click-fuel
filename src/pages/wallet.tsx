@@ -1,6 +1,6 @@
 import React from "react"
 import Layout from "components/Layout"
-import { useRouter } from "next/router"
+import * as walletHooks from "wallet/hooks"
 import {
     Box,
     Flex,
@@ -19,17 +19,36 @@ import {
 } from "@chakra-ui/react"
 import { truncateAddress } from "libs/utils"
 import { CopyIcon } from "@chakra-ui/icons"
-import {
-    useAccount,
-    useAddress,
-    useBalance,
-    useImportWallet,
-    useTransferTokens,
-} from "wallet/hooks"
+
+import { useGoogleLogin } from "react-google-login"
+
+function useVerifyAccount() {
+    const toast = useToast()
+    const getTokens = walletHooks.useGetTokens()
+
+    const data = useGoogleLogin({
+        clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        onSuccess: async (data) => {
+            // @ts-ignore
+            await getTokens(data.googleId)
+        },
+        onFailure: (res) => {
+            console.log("Login failed", res)
+            toast({
+                title: "Login Failed",
+                description: res.details || "Unexpected error occurred",
+                status: "error",
+                position: "top-right",
+            })
+        },
+    })
+
+    return data
+}
 
 function useTransferTokenForm() {
     const toast = useToast()
-    const transferTokens = useTransferTokens()
+    const transferTokens = walletHooks.useTransferTokens()
     const [formState, setFormState] = React.useState({
         sending: false,
         error: "",
@@ -76,7 +95,7 @@ function useTransferTokenForm() {
 
 function useImportAccountForm() {
     const toast = useToast()
-    const importWallet = useImportWallet()
+    const importWallet = walletHooks.useImportWallet()
     const [error, setError] = React.useState("")
     const [mnemonic, setMnemonic] = React.useState("")
 
@@ -115,20 +134,15 @@ function useImportAccountForm() {
 }
 
 function WalletPage() {
-    const router = useRouter()
-    const address: string = useAddress()
-    const balance = useBalance()
-    const account = useAccount()
+    const address: string = walletHooks.useAddress()
+    const balance = walletHooks.useBalance()
+    const account = walletHooks.useAccount()
     const { hasCopied, onCopy } = useClipboard(address)
     const accountCopy = useClipboard(account)
     const transferForm = useTransferTokenForm()
     const importAccountForm = useImportAccountForm()
-
-    React.useEffect(() => {
-        if (!address) {
-            router.push("/")
-        }
-    }, [address])
+    const googleSignIn = useVerifyAccount()
+    const isVerified = walletHooks.useAccountVerified()
 
     return (
         <Layout hideCreate>
@@ -150,7 +164,7 @@ function WalletPage() {
                     </Text>
 
                     <Flex justify="center" align="center">
-                        <Text fontSize="xl">{truncateAddress(address, 8)}</Text>
+                        <Text fontSize="xl">{truncateAddress(address || "", 8)}</Text>
                         <IconButton
                             variant="outline"
                             ml={4}
@@ -160,6 +174,17 @@ function WalletPage() {
                             icon={<CopyIcon />}
                         />
                     </Flex>
+
+                    {!isVerified && (
+                        <Button
+                            isDisabled={!googleSignIn.loaded}
+                            onClick={googleSignIn.signIn}
+                            mt={3}
+                            variant="ghost"
+                        >
+                            Verify Google account for 50 fuel tokens
+                        </Button>
+                    )}
 
                     {hasCopied && <Text>Copied</Text>}
                 </Flex>
