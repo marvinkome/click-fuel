@@ -41,3 +41,22 @@ export async function createLink(wallet: ethers.Wallet, link: string) {
     await tokenContract.connect(wallet).approve(clickFuelContract.address, 10)
     await clickFuelContract.connect(wallet).createPost(link)
 }
+
+export async function getLinks(wallet: ethers.Wallet) {
+    wallet = wallet.connect(provider)
+
+    const linkCount = (await clickFuelContract.connect(wallet).getPostsCount()) as number
+
+    const links = await Promise.all(
+        Array.from({ length: linkCount }).map((_, idx) => {
+            return clickFuelContract.connect(wallet).allPosts(idx)
+        })
+    )
+
+    return links.map((l) => ({
+        creator: l.creator as string,
+        link: l.detail as string,
+        createdTime: (l.createdTime?.toNumber() || 0) as number,
+        flameCount: (l.flameCount?.toNumber() || 0) as number,
+    }))
+}

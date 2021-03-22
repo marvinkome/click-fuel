@@ -9,7 +9,17 @@ import {
     getOVMBalance,
     getTokens,
     transferToken,
+    getLinks,
 } from "./index"
+import { useToast } from "@chakra-ui/react"
+
+type AsyncReturnType<T extends (...args: any) => Promise<any>> = T extends (
+    ...args: any
+) => Promise<infer R>
+    ? R
+    : any
+
+export type PostType = AsyncReturnType<typeof getLinks>
 
 export function useAddress() {
     const [{ address }] = useClientContext()
@@ -93,6 +103,35 @@ export function useCreatePost() {
         },
         [wallet, state.balance]
     )
+}
+
+export function usePosts() {
+    const [posts, setPosts] = useState<PostType>([])
+    const wallet = useWallet()
+    const toast = useToast()
+
+    const _getPosts = useCallback(async () => {
+        const posts = await getLinks(wallet).catch((e) => {
+            toast({
+                title: "Failed to get links",
+                description: e.message || "Unexpected error",
+                status: "error",
+                position: "top-right",
+                isClosable: true,
+            })
+
+            return []
+        })
+
+        setPosts(posts)
+    }, [wallet])
+
+    useEffect(() => {
+        if (!wallet) return
+        _getPosts()
+    }, [wallet])
+
+    return posts
 }
 
 export function useWalletUpdater() {
