@@ -39,6 +39,7 @@ function useVerifyAccount() {
                 description: res.details || "Unexpected error occurred",
                 status: "error",
                 position: "top-right",
+                isClosable: true,
             })
         },
     })

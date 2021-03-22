@@ -3,7 +3,13 @@ import { Wallet } from "ethers"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { STORAGE_NAME, getAccountFromLocalStorage, toBase64 } from "wallet/utils"
 import { useClientContext } from "./context"
-import { checkAccountVerification, getOVMBalance, getTokens, transferToken } from "./index"
+import {
+    checkAccountVerification,
+    createLink,
+    getOVMBalance,
+    getTokens,
+    transferToken,
+} from "./index"
 
 export function useAddress() {
     const [{ address }] = useClientContext()
@@ -71,6 +77,19 @@ export function useTransferTokens() {
         async (amount: number, receiver: string) => {
             await transferToken(wallet, receiver, amount)
             actions.updateBalance(state.balance - amount)
+        },
+        [wallet, state.balance]
+    )
+}
+
+export function useCreatePost() {
+    const [state, actions] = useClientContext()
+    const wallet = useWallet()
+
+    return useCallback(
+        async (link: string) => {
+            await createLink(wallet, link)
+            actions.updateBalance(state.balance - 10)
         },
         [wallet, state.balance]
     )

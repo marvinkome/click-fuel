@@ -17,8 +17,6 @@ function Home() {
                             </Text>
                         </HStack>
 
-                        <Text>Loved this article I found a while back!!!</Text>
-
                         <Box
                             border="1px"
                             borderColor="gray.600"

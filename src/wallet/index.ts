@@ -34,3 +34,10 @@ export async function checkAccountVerification(wallet: ethers.Wallet) {
         .connect(wallet.connect(provider))
         .hasFaucetAddress(wallet.address))
 }
+
+export async function createLink(wallet: ethers.Wallet, link: string) {
+    wallet = wallet.connect(provider)
+
+    await tokenContract.connect(wallet).approve(clickFuelContract.address, 10)
+    await clickFuelContract.connect(wallet).createPost(link)
+}
