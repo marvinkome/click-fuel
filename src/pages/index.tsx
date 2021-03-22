@@ -3,6 +3,7 @@ import fetch from "isomorphic-fetch"
 import Layout from "components/Layout"
 import dayjs from "dayjs"
 import RelativeTime from "dayjs/plugin/relativeTime"
+import Duration from "dayjs/plugin/duration"
 import {
     AspectRatio,
     Box,
@@ -19,14 +20,23 @@ import {
     Spinner,
 } from "@chakra-ui/react"
 import { PostType, usePosts, useVotePost } from "wallet/hooks"
-import { truncateAddress } from "libs/utils"
+import { calculatePostTimeLeft, truncateAddress } from "libs/utils"
 
 dayjs.extend(RelativeTime)
+dayjs.extend(Duration)
 
 const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId }) => {
+    const [flameCount, setFlameCount] = React.useState(0)
     const [linkData, setLinkData] = React.useState<any>(null)
+    const [timeLeft, setTimeLeft] = React.useState(0)
     const votePost = useVotePost()
 
+    // keep flame count in state so we can recalculate after any action
+    React.useEffect(() => {
+        setFlameCount(post.flameCount)
+    }, [post])
+
+    // fetch link data
     React.useEffect(() => {
         ;(async () => {
             const previewData = await fetch("/api/ogs", {
@@ -43,6 +53,26 @@ const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId })
             setLinkData(previewData)
         })()
     }, [post.link])
+
+    // update timeLeft
+    React.useEffect(() => {
+        if (flameCount <= 0) return
+
+        setTimeLeft(calculatePostTimeLeft(post.createdTime, flameCount))
+
+        const interval = setInterval(() => {
+            setTimeLeft(calculatePostTimeLeft(post.createdTime, flameCount))
+        }, 1000)
+
+        return () => {
+            clearInterval(interval)
+        }
+    }, [flameCount])
+
+    const handleVote = async (upvote: boolean) => {
+        await votePost(upvote, postId)
+        setFlameCount(upvote ? flameCount + 1 : flameCount - 1)
+    }
 
     return (
         <Box borderBottom="1px" borderColor="gray.600" py={7} mx={3}>
@@ -87,7 +117,7 @@ const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId })
             <Flex align="center" justify="space-between" pt={7} px={2}>
                 <Tooltip label="Use Flames to keep post alive">
                     <Button
-                        onClick={() => votePost(true, postId)}
+                        onClick={() => handleVote(true)}
                         colorScheme="red"
                         variant="ghost"
                         size="lg"
@@ -99,12 +129,14 @@ const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId })
 
                 <VStack spacing="0">
                     <Text fontSize="xs">Time Left</Text>
-                    <Text color="green.500">22:05:16</Text>
+                    <Text color="green.500">
+                        {dayjs.duration(timeLeft, "m").format("HH:mm:ss")}
+                    </Text>
                 </VStack>
 
                 <Tooltip label="Use Ice to kill post faster">
                     <Button
-                        onClick={() => votePost(false, postId)}
+                        onClick={() => handleVote(false)}
                         colorScheme="blue"
                         variant="ghost"
                         size="lg"
@@ -120,11 +152,14 @@ const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId })
 
 function Home() {
     const { posts, isFetching } = usePosts()
+    const validPosts = posts.filter(
+        (post) => calculatePostTimeLeft(post.createdTime, post.flameCount) > 0
+    )
 
     return (
         <Layout>
             <Box mt={7}>
-                {posts.map((post, id) => (
+                {validPosts.map((post, id) => (
                     <Post post={post} postId={id} key={id} />
                 ))}
 
@@ -140,7 +175,7 @@ function Home() {
                     </Center>
                 )}
 
-                {!posts.length && !isFetching && (
+                {!validPosts.length && !isFetching && (
                     <Text align="center">
                         No posts yet. Post the best content on the internet and earn crypto
                     </Text>
