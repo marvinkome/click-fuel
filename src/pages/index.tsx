@@ -25,7 +25,7 @@ import { calculatePostTimeLeft, truncateAddress } from "libs/utils"
 dayjs.extend(RelativeTime)
 dayjs.extend(Duration)
 
-const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId }) => {
+const Post: React.FC<{ post: PostType[0] }> = ({ post }) => {
     const [flameCount, setFlameCount] = React.useState(0)
     const [linkData, setLinkData] = React.useState<any>(null)
     const [timeLeft, setTimeLeft] = React.useState(0)
@@ -70,7 +70,7 @@ const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId })
     }, [flameCount])
 
     const handleVote = async (upvote: boolean) => {
-        await votePost(upvote, postId)
+        await votePost(upvote, parseInt(`${post.id}`, 10))
         setFlameCount(upvote ? flameCount + 1 : flameCount - 1)
     }
 
@@ -152,15 +152,19 @@ const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId })
 
 function Home() {
     const { posts, isFetching } = usePosts()
-    const validPosts = posts.filter(
-        (post) => calculatePostTimeLeft(post.createdTime, post.flameCount) > 0
-    )
+    const validPosts = posts
+        .filter((post) => calculatePostTimeLeft(post.createdTime, post.flameCount) > 0)
+        .sort(
+            (a, b) =>
+                calculatePostTimeLeft(b.createdTime, b.flameCount) -
+                calculatePostTimeLeft(a.createdTime, a.flameCount)
+        )
 
     return (
         <Layout>
             <Box mt={7}>
-                {validPosts.map((post, id) => (
-                    <Post post={post} postId={id} key={id} />
+                {validPosts.map((post) => (
+                    <Post post={post} key={post.id} />
                 ))}
 
                 {isFetching && (

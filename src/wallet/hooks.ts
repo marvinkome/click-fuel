@@ -100,6 +100,8 @@ export function useCreatePost() {
     return useCallback(
         async (link: string) => {
             await createLink(wallet, link)
+
+            actions.setShouldFetchPosts(true)
             actions.updateBalance(state.balance - 10)
         },
         [wallet, state.balance]
@@ -107,13 +109,13 @@ export function useCreatePost() {
 }
 
 export function usePosts() {
+    const [state, actions] = useClientContext()
     const [isFetching, setIsFetching] = useState(true)
     const [posts, setPosts] = useState<PostType>([])
     const wallet = useWallet()
     const toast = useToast()
 
     const _getPosts = useCallback(async () => {
-        setIsFetching(true)
         const posts = await getLinks(wallet).catch((e) => {
             toast({
                 title: "Failed to get links",
@@ -127,13 +129,21 @@ export function usePosts() {
         })
 
         setPosts(posts)
-        setIsFetching(false)
     }, [wallet])
 
     useEffect(() => {
         if (!wallet) return
-        _getPosts()
+
+        setIsFetching(true)
+        _getPosts().then((data) => setIsFetching(false))
     }, [wallet])
+
+    useEffect(() => {
+        if (state.shouldFetchPosts) {
+            _getPosts()
+            actions.setShouldFetchPosts(false)
+        }
+    }, [wallet, state.shouldFetchPosts])
 
     return { posts, isFetching }
 }

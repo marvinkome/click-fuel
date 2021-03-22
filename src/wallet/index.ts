@@ -53,7 +53,8 @@ export async function getLinks(wallet: ethers.Wallet) {
         })
     )
 
-    return links.map((l) => ({
+    return links.map((l, idx) => ({
+        id: idx,
         creator: l.creator as string,
         link: l.detail as string,
         createdTime: (l.createdTime?.toNumber() || 0) as number,

@@ -6,6 +6,7 @@ const REDUCER_ACTIONS = {
     ADD_ACCOUNT: "addAccount",
     UPDATE_BALANCE: "updateBalance",
     UPDATE_ACCOUNT_VERIFIED: "updateAccountVerified",
+    SET_SHOULD_FETCH_POSTS: "setShouldFetchPosts",
     RESET: "reset",
 }
 
@@ -16,6 +17,7 @@ export const WalletContext = createContext([
         address: null as string,
         balance: 0 as number,
         verified: true as boolean,
+        shouldFetchPosts: false as boolean,
     },
 
     // actions
@@ -25,6 +27,7 @@ export const WalletContext = createContext([
         addAccount: (account?: string) => null,
         updateBalance: (balance: number) => null,
         updateAccountVerified: (verified: boolean) => null,
+        setShouldFetchPosts: (shouldFetchPosts?: boolean) => null,
         reset: () => null,
     },
 ])
@@ -39,6 +42,7 @@ function useContextReducer(address: string) {
         address,
         balance: 0,
         verified: true,
+        shouldFetchPosts: false,
     }
 
     const reducer = (state, action) => {
@@ -63,6 +67,11 @@ function useContextReducer(address: string) {
             case REDUCER_ACTIONS.UPDATE_ACCOUNT_VERIFIED: {
                 const { verified } = action.payload
                 return { ...state, verified }
+            }
+
+            case REDUCER_ACTIONS.SET_SHOULD_FETCH_POSTS: {
+                const { shouldFetchPosts } = action.payload
+                return { ...state, shouldFetchPosts }
             }
 
             case REDUCER_ACTIONS.RESET: {
@@ -98,11 +107,23 @@ function useContextReducer(address: string) {
         dispatch({ type: REDUCER_ACTIONS.UPDATE_ACCOUNT_VERIFIED, payload: { verified } })
     }, [])
 
+    const setShouldFetchPosts = useCallback((shouldFetchPosts: boolean) => {
+        dispatch({ type: REDUCER_ACTIONS.SET_SHOULD_FETCH_POSTS, payload: { shouldFetchPosts } })
+    }, [])
+
     const reset = useCallback(() => {
         dispatch({ type: REDUCER_ACTIONS.RESET, payload: {} })
     }, [])
 
-    return { state, initialize, addAccount, updateBalance, updateAccountVerified, reset }
+    return {
+        state,
+        initialize,
+        addAccount,
+        updateBalance,
+        updateAccountVerified,
+        setShouldFetchPosts,
+        reset,
+    }
 }
 
 export const WalletProvider: React.FC<{ address?: string }> = ({ address, children }) => {
