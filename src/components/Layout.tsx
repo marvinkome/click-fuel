@@ -79,7 +79,7 @@ const Layout: React.FC<{ hideCreate?: boolean }> = ({ children, hideCreate = fal
                     borderRadius="full"
                     p={2}
                     pos="fixed"
-                    bottom="10"
+                    bottom="100"
                     right="10"
                     display={{ base: "block", md: "none" }}
                 >

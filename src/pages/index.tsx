@@ -3,14 +3,29 @@ import fetch from "isomorphic-fetch"
 import Layout from "components/Layout"
 import dayjs from "dayjs"
 import RelativeTime from "dayjs/plugin/relativeTime"
-import { AspectRatio, Box, Flex, Heading, HStack, Img, Text, VStack, Link } from "@chakra-ui/react"
-import { PostType, usePosts } from "wallet/hooks"
+import {
+    AspectRatio,
+    Box,
+    Flex,
+    Heading,
+    HStack,
+    Img,
+    Text,
+    VStack,
+    Link,
+    Button,
+    Tooltip,
+    Center,
+    Spinner,
+} from "@chakra-ui/react"
+import { PostType, usePosts, useVotePost } from "wallet/hooks"
 import { truncateAddress } from "libs/utils"
 
 dayjs.extend(RelativeTime)
 
-const Post: React.FC<{ post: PostType[0] }> = ({ post }) => {
+const Post: React.FC<{ post: PostType[0]; postId: number }> = ({ post, postId }) => {
     const [linkData, setLinkData] = React.useState<any>(null)
+    const votePost = useVotePost()
 
     React.useEffect(() => {
         ;(async () => {
@@ -70,36 +85,62 @@ const Post: React.FC<{ post: PostType[0] }> = ({ post }) => {
 
             {/* actions */}
             <Flex align="center" justify="space-between" pt={7} px={2}>
-                <HStack align="center">
-                    <Img src="/flame-icon.svg" boxSize="30px" />
-                    <Text color="red.400">120k</Text>
-                </HStack>
+                <Tooltip label="Use Flames to keep post alive">
+                    <Button
+                        onClick={() => votePost(true, postId)}
+                        colorScheme="red"
+                        variant="ghost"
+                        size="lg"
+                        align="center"
+                    >
+                        <Img src="/flame-icon.svg" boxSize="30px" />
+                    </Button>
+                </Tooltip>
 
                 <VStack spacing="0">
                     <Text fontSize="xs">Time Left</Text>
                     <Text color="green.500">22:05:16</Text>
                 </VStack>
 
-                <HStack align="center">
-                    <Img src="/snowflake-icon.svg" boxSize="30px" />
-                    <Text>5.4k</Text>
-                </HStack>
+                <Tooltip label="Use Ice to kill post faster">
+                    <Button
+                        onClick={() => votePost(false, postId)}
+                        colorScheme="blue"
+                        variant="ghost"
+                        size="lg"
+                        align="center"
+                    >
+                        <Img src="/snowflake-icon.svg" boxSize="30px" />
+                    </Button>
+                </Tooltip>
             </Flex>
         </Box>
     )
 }
 
 function Home() {
-    const posts = usePosts()
+    const { posts, isFetching } = usePosts()
 
     return (
         <Layout>
             <Box mt={7}>
                 {posts.map((post, id) => (
-                    <Post post={post} key={id} />
+                    <Post post={post} postId={id} key={id} />
                 ))}
 
-                {!posts.length && (
+                {isFetching && (
+                    <Center h="50vh">
+                        <Spinner
+                            thickness="4px"
+                            speed="0.65s"
+                            emptyColor="gray.200"
+                            color="blue.500"
+                            size="xl"
+                        />
+                    </Center>
+                )}
+
+                {!posts.length && !isFetching && (
                     <Text align="center">
                         No posts yet. Post the best content on the internet and earn crypto
                     </Text>

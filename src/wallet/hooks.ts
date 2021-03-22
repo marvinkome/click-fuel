@@ -10,6 +10,7 @@ import {
     getTokens,
     transferToken,
     getLinks,
+    voteForPost,
 } from "./index"
 import { useToast } from "@chakra-ui/react"
 
@@ -106,11 +107,13 @@ export function useCreatePost() {
 }
 
 export function usePosts() {
+    const [isFetching, setIsFetching] = useState(true)
     const [posts, setPosts] = useState<PostType>([])
     const wallet = useWallet()
     const toast = useToast()
 
     const _getPosts = useCallback(async () => {
+        setIsFetching(true)
         const posts = await getLinks(wallet).catch((e) => {
             toast({
                 title: "Failed to get links",
@@ -124,6 +127,7 @@ export function usePosts() {
         })
 
         setPosts(posts)
+        setIsFetching(false)
     }, [wallet])
 
     useEffect(() => {
@@ -131,7 +135,20 @@ export function usePosts() {
         _getPosts()
     }, [wallet])
 
-    return posts
+    return { posts, isFetching }
+}
+
+export function useVotePost() {
+    const [state, actions] = useClientContext()
+    const wallet = useWallet()
+
+    return useCallback(
+        async (upvote: boolean, postId: number) => {
+            await voteForPost(wallet, upvote, postId)
+            actions.updateBalance(state.balance - 1)
+        },
+        [wallet, state.balance]
+    )
 }
 
 export function useWalletUpdater() {

@@ -60,3 +60,10 @@ export async function getLinks(wallet: ethers.Wallet) {
         flameCount: (l.flameCount?.toNumber() || 0) as number,
     }))
 }
+
+export async function voteForPost(wallet: ethers.Wallet, upvote: boolean, postId: number) {
+    wallet = wallet.connect(provider)
+
+    await tokenContract.connect(wallet).approve(clickFuelContract.address, 10)
+    await clickFuelContract.connect(wallet).vote(upvote, postId)
+}
