@@ -38,6 +38,5 @@ ethereum/artifacts/
 ethereum/cache/
 node_modules
 
-#Hardhat files
-cache
-artifacts
+# Local Netlify folder
+.netlify

@@ -1,15 +1,14 @@
 import * as ethers from "ethers"
+import clickFuelABI from "artifacts/ClickFuel.json"
+import fuelTokenABI from "artifacts/FuelToken.json"
 
-// const provider = new ethers.providers.JsonRpcProvider("https://kovan.optimism.io")
-const provider = new ethers.providers.JsonRpcProvider()
+const provider = new ethers.providers.JsonRpcProvider("https://kovan.optimism.io")
 
 const address = process.env.NEXT_PUBLIC_CLICK_FUEL_CONTRACT_ADDRESS
-const abi = require("../../ethereum/artifacts/contracts/ClickFuel.sol/ClickFuel-ovm.json").abi
-const clickFuelContract = new ethers.Contract(address, abi, provider)
+const clickFuelContract = new ethers.Contract(address, clickFuelABI, provider)
 
 const tokenAddress = process.env.NEXT_PUBLIC_FUEL_TOKEN_CONTRACT_ADDRESS
-const tokenAbi = require("../../ethereum/artifacts/contracts/ClickFuel.sol/FuelToken-ovm.json").abi
-const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, provider)
+const tokenContract = new ethers.Contract(tokenAddress, fuelTokenABI, provider)
 
 // WALLET
 export async function getOVMBalance(wallet: ethers.Wallet) {

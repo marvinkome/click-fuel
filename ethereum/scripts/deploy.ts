@@ -1,4 +1,25 @@
-import { l2ethers, ethers } from "hardhat"
+import { l2ethers, ethers, artifacts } from "hardhat"
+import fs from "fs"
+
+function saveFrontendFiles() {
+    const contractsDir = __dirname + "/../../src/artifacts"
+
+    if (!fs.existsSync(contractsDir)) {
+        fs.mkdirSync(contractsDir)
+    }
+
+    const ClickFuelArtifact = artifacts.readArtifactSync("ClickFuel")
+    fs.writeFileSync(
+        contractsDir + "/ClickFuel.json",
+        JSON.stringify(ClickFuelArtifact.abi, null, 2)
+    )
+
+    const FuelTokenArtifact = artifacts.readArtifactSync("FuelToken")
+    fs.writeFileSync(
+        contractsDir + "/FuelToken.json",
+        JSON.stringify(FuelTokenArtifact.abi, null, 2)
+    )
+}
 
 async function main() {
     const initialSupply = 50_000_000
@@ -17,6 +38,8 @@ async function main() {
 
     console.log("ClickFuel Contract address:", clickFuel.address)
     console.log("FuelToken Contract address:", fuelToken.address)
+
+    saveFrontendFiles()
 }
 
 main()
