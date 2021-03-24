@@ -36,13 +36,6 @@ const theme = extendTheme({
                 },
             },
         },
-
-        useToast: {
-            defaultProps: {
-                isClosable: true,
-                position: "top-right",
-            },
-        },
     },
 })
 

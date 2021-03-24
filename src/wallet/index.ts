@@ -68,3 +68,14 @@ export async function voteForPost(wallet: ethers.Wallet, upvote: boolean, postId
     await tokenContract.connect(wallet).approve(clickFuelContract.address, 10)
     await clickFuelContract.connect(wallet).vote(upvote, postId)
 }
+
+export async function getEarnings(wallet: ethers.Wallet) {
+    return await clickFuelContract
+        .connect(wallet.connect(provider))
+        .totalEarnings(wallet.address)
+        .toNumber()
+}
+
+export async function withdrawEarnings(wallet: ethers.Wallet) {
+    await clickFuelContract.connect(wallet.connect(provider)).withdraw()
+}

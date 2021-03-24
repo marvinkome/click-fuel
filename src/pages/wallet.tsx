@@ -138,12 +138,15 @@ function WalletPage() {
     const address: string = walletHooks.useAddress()
     const balance = walletHooks.useBalance()
     const account = walletHooks.useAccount()
-    const { hasCopied, onCopy } = useClipboard(address)
+    const isVerified = walletHooks.useAccountVerified()
+    const earnings = walletHooks.useEarnings()
+
+    const addressCopy = useClipboard(address)
     const accountCopy = useClipboard(account)
+
     const transferForm = useTransferTokenForm()
     const importAccountForm = useImportAccountForm()
     const googleSignIn = useVerifyAccount()
-    const isVerified = walletHooks.useAccountVerified()
 
     return (
         <Layout hideCreate>
@@ -171,23 +174,29 @@ function WalletPage() {
                             ml={4}
                             mr={2}
                             aria-label="Copy wallet address"
-                            onClick={onCopy}
+                            onClick={addressCopy.onCopy}
                             icon={<CopyIcon />}
                         />
                     </Flex>
 
-                    {!isVerified && (
+                    {!isVerified ? (
                         <Button
                             isDisabled={!googleSignIn.loaded}
                             onClick={googleSignIn.signIn}
                             mt={3}
                             variant="ghost"
                         >
-                            Verify Google account for 50 fuel tokens
+                            Verify Google account for 50 FUEL tokens
                         </Button>
+                    ) : (
+                        !!earnings.value && (
+                            <Button onClick={earnings.withdrawEarnings} mt={3} variant="ghost">
+                                Collect your {earnings} FUEL tokens reward from posts
+                            </Button>
+                        )
                     )}
 
-                    {hasCopied && <Text>Copied</Text>}
+                    {addressCopy.hasCopied && <Text>Copied</Text>}
                 </Flex>
 
                 <Box mt={16}>

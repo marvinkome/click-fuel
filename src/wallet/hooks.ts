@@ -11,6 +11,8 @@ import {
     transferToken,
     getLinks,
     voteForPost,
+    getEarnings,
+    withdrawEarnings,
 } from "./index"
 import { useToast } from "@chakra-ui/react"
 
@@ -50,6 +52,47 @@ export function useBalance() {
 export function useAccountVerified() {
     const [{ verified }] = useClientContext()
     return verified
+}
+
+export function useEarnings() {
+    const [state, actions] = useClientContext()
+    const [earnings, setEarnings] = useState(0)
+    const wallet = useWallet()
+    const toast = useToast()
+
+    const _getEarnings = useCallback(async () => {
+        const earnings = await getEarnings(wallet).catch((e) => {
+            return 0
+        })
+
+        setEarnings(earnings)
+    }, [wallet])
+
+    const withdraw = useCallback(async () => {
+        await withdrawEarnings(wallet)
+            .then(() => {
+                setEarnings(0)
+                actions.updateBalance(state.balance + earnings)
+            })
+            .catch((e) => {
+                toast({
+                    title: "Failed to withdraw earnings",
+                    description: e.message || "Unexpected error",
+                    status: "error",
+                    position: "top-right",
+                    isClosable: true,
+                })
+
+                return null
+            })
+    }, [wallet])
+
+    useEffect(() => {
+        if (!wallet) return
+        _getEarnings()
+    }, [wallet])
+
+    return { value: earnings, withdrawEarnings: withdraw }
 }
 
 export function useImportWallet() {

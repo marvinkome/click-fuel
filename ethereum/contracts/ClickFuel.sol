@@ -23,6 +23,7 @@ contract ClickFuel {
 
     mapping(string => bool) public hasFaucetUserId;
     mapping(address => bool) public hasFaucetAddress;
+    mapping(address => uint256) public totalEarnings;
 
     modifier createable() {
         require(token.transferFrom(msg.sender, address(this), 10));
@@ -68,19 +69,29 @@ contract ClickFuel {
 
         if (upvote == true) {
             post.flameCount++;
+            totalEarnings[post.creator]++;
         }
 
         if (upvote == false) {
             post.flameCount--;
+
+            if (totalEarnings[post.creator] > 0) {
+                totalEarnings[post.creator]--;
+            }
         }
     }
 
-    function withdraw(uint256 indexOfPost) public {
-        Post storage post = allPosts[indexOfPost];
+    function withdraw() public {
+        require(totalEarnings[msg.sender] > 0, "not enough earnings");
 
-        token.transfer(msg.sender, post.flameCount);
+        for (uint256 i = 0; i < allPosts.length; i++) {
+            if (allPosts[i].creator == msg.sender) {
+                allPosts[i].flameCount = 0;
+            }
+        }
 
-        post.flameCount = 0;
+        token.transfer(msg.sender, totalEarnings[msg.sender]);
+        totalEarnings[msg.sender] = 0;
     }
 
     function getPostsCount() public view returns (uint256) {

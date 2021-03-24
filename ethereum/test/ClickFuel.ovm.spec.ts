@@ -2,7 +2,7 @@ import { expect } from "./setup"
 import { l2ethers as ethers } from "hardhat"
 import { Contract, Signer } from "ethers"
 
-describe("ClickFuel OVM", () => {
+describe.skip("ClickFuel OVM", () => {
     let account1: Signer
     let account2: Signer
     let account3: Signer
@@ -120,6 +120,7 @@ describe("ClickFuel OVM", () => {
 
             const post = await ClickFuel.allPosts(0)
             expect(post.flameCount.toNumber()).to.eq(11)
+            expect(post.earnings.toNumber()).to.eq(1)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
             expect(creatorBalance).to.eq(40)
@@ -143,6 +144,7 @@ describe("ClickFuel OVM", () => {
 
             const post = await ClickFuel.allPosts(0)
             expect(post.flameCount.toNumber()).to.eq(9)
+            expect(post.earnings.toNumber()).to.eq(0)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
             expect(creatorBalance).to.eq(40)
@@ -151,9 +153,8 @@ describe("ClickFuel OVM", () => {
             expect(voterBalance).to.eq(49)
         })
 
-        it("should withdraw from a post downvoted post", async () => {
+        it.skip("should not withdraw from a post with no earning", async () => {
             const creator = account1
-            const creatorAddress = await creator.getAddress()
 
             const voter = account2
             const voter1 = account3
@@ -161,6 +162,10 @@ describe("ClickFuel OVM", () => {
             // create a post
             await tokenContract.connect(creator).approve(ClickFuel.address, 10)
             await ClickFuel.connect(creator).createPost("https://google.com")
+
+            // upvote a post once
+            await tokenContract.connect(voter).approve(ClickFuel.address, 1)
+            await ClickFuel.connect(voter).vote(true, 0)
 
             // downvote a post once
             await tokenContract.connect(voter).approve(ClickFuel.address, 1)
@@ -171,14 +176,45 @@ describe("ClickFuel OVM", () => {
             await ClickFuel.connect(voter1).vote(false, 0)
 
             let post = await ClickFuel.allPosts(0)
-            expect(post.flameCount.toNumber()).to.eq(8)
+            expect(post.flameCount.toNumber()).to.eq(9)
+            expect(post.earnings.toNumber()).to.eq(0)
+
+            await expect(ClickFuel.connect(creator).withdraw(0)).to.be.revertedWith(
+                "not enough earnings"
+            )
+        })
+
+        it("should withdraw from a post with earning", async () => {
+            const creator = account1
+            const creatorAddress = await creator.getAddress()
+
+            const voter = account2
+            const voter1 = account3
+
+            // create a post
+            await tokenContract.connect(creator).approve(ClickFuel.address, 10)
+            await ClickFuel.connect(creator).createPost("https://google.com")
+
+            // upvote a post once
+            await tokenContract.connect(voter).approve(ClickFuel.address, 1)
+            await ClickFuel.connect(voter).vote(true, 0)
+
+            // upvote a post again
+            await tokenContract.connect(voter1).approve(ClickFuel.address, 1)
+            await ClickFuel.connect(voter1).vote(true, 0)
+
+            let post = await ClickFuel.allPosts(0)
+            expect(post.flameCount.toNumber()).to.eq(12)
+            expect(post.earnings.toNumber()).to.eq(2)
 
             await ClickFuel.connect(creator).withdraw(0)
+
             post = await ClickFuel.allPosts(0)
             expect(post.flameCount.toNumber()).to.eq(0)
+            expect(post.earnings.toNumber()).to.eq(0)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
-            expect(creatorBalance).to.eq(48)
+            expect(creatorBalance).to.eq(42)
         })
     })
 })
