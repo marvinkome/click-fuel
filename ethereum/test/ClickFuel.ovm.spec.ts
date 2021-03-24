@@ -2,7 +2,7 @@ import { expect } from "./setup"
 import { l2ethers as ethers } from "hardhat"
 import { Contract, Signer } from "ethers"
 
-describe.skip("ClickFuel OVM", () => {
+describe("ClickFuel OVM", () => {
     let account1: Signer
     let account2: Signer
     let account3: Signer
@@ -119,8 +119,10 @@ describe.skip("ClickFuel OVM", () => {
             await ClickFuel.connect(voter).vote(true, 0)
 
             const post = await ClickFuel.allPosts(0)
+            const earnings = await ClickFuel.totalEarnings(creatorAddress)
+
             expect(post.flameCount.toNumber()).to.eq(11)
-            expect(post.earnings.toNumber()).to.eq(1)
+            expect(earnings.toNumber()).to.eq(1)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
             expect(creatorBalance).to.eq(40)
@@ -143,8 +145,10 @@ describe.skip("ClickFuel OVM", () => {
             await ClickFuel.connect(voter).vote(false, 0)
 
             const post = await ClickFuel.allPosts(0)
+            const earnings = await ClickFuel.totalEarnings(creatorAddress)
+
             expect(post.flameCount.toNumber()).to.eq(9)
-            expect(post.earnings.toNumber()).to.eq(0)
+            expect(earnings.toNumber()).to.eq(0)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
             expect(creatorBalance).to.eq(40)
@@ -155,6 +159,7 @@ describe.skip("ClickFuel OVM", () => {
 
         it.skip("should not withdraw from a post with no earning", async () => {
             const creator = account1
+            const creatorAddress = await creator.getAddress()
 
             const voter = account2
             const voter1 = account3
@@ -176,10 +181,12 @@ describe.skip("ClickFuel OVM", () => {
             await ClickFuel.connect(voter1).vote(false, 0)
 
             let post = await ClickFuel.allPosts(0)
-            expect(post.flameCount.toNumber()).to.eq(9)
-            expect(post.earnings.toNumber()).to.eq(0)
+            const earnings = await ClickFuel.totalEarnings(creatorAddress)
 
-            await expect(ClickFuel.connect(creator).withdraw(0)).to.be.revertedWith(
+            expect(post.flameCount.toNumber()).to.eq(9)
+            expect(earnings.toNumber()).to.eq(0)
+
+            await expect(ClickFuel.connect(creator).withdraw()).to.be.revertedWith(
                 "not enough earnings"
             )
         })
@@ -204,14 +211,18 @@ describe.skip("ClickFuel OVM", () => {
             await ClickFuel.connect(voter1).vote(true, 0)
 
             let post = await ClickFuel.allPosts(0)
-            expect(post.flameCount.toNumber()).to.eq(12)
-            expect(post.earnings.toNumber()).to.eq(2)
+            let earnings = await ClickFuel.totalEarnings(creatorAddress)
 
-            await ClickFuel.connect(creator).withdraw(0)
+            expect(post.flameCount.toNumber()).to.eq(12)
+            expect(earnings.toNumber()).to.eq(2)
+
+            await ClickFuel.connect(creator).withdraw()
 
             post = await ClickFuel.allPosts(0)
+            earnings = await ClickFuel.totalEarnings(creatorAddress)
+
             expect(post.flameCount.toNumber()).to.eq(0)
-            expect(post.earnings.toNumber()).to.eq(0)
+            expect(earnings.toNumber()).to.eq(0)
 
             const creatorBalance = (await tokenContract.balanceOf(creatorAddress)).toNumber()
             expect(creatorBalance).to.eq(42)
