@@ -25,7 +25,7 @@
         "dayjs": "^1.10.4",
         "dotenv": "^8.2.0",
         "framer-motion": "^3.10.3",
-        "hardhat": "^2.1.1",
+        "hardhat": "^2.1.2",
         "isomorphic-fetch": "^3.0.0",
         "js-cookie": "^2.2.1",
         "next": "10.0.8",

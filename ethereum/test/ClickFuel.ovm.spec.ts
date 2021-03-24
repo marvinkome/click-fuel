@@ -56,7 +56,7 @@ describe("ClickFuel OVM", () => {
             expect(receiverBalance).to.eq(50)
         })
 
-        it.skip("should revert when requesting token twice", async () => {
+        it("should revert when requesting token twice", async () => {
             const receiver = account2
             const receiver2 = account3
 
@@ -84,7 +84,7 @@ describe("ClickFuel OVM", () => {
             await ClickFuel.connect(account3).transferToken(googleId3)
         })
 
-        it.skip("should revert when sender doesn't have enough balance to create post", async () => {
+        it("should revert when sender doesn't have enough balance to create post", async () => {
             const creator = account4
             await expect(
                 ClickFuel.connect(creator).createPost("https://google.com")
@@ -157,7 +157,7 @@ describe("ClickFuel OVM", () => {
             expect(voterBalance).to.eq(49)
         })
 
-        it.skip("should not withdraw from a post with no earning", async () => {
+        it("should not withdraw from a post with no earning", async () => {
             const creator = account1
             const creatorAddress = await creator.getAddress()
 
